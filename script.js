@@ -38,7 +38,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const addButton = document.createElement('button');
   addButton.className = 'add-btn';
-  addButton.innerHTML = '➕ Добавить';
+  
+  const addIcon = document.createElement('span');
+  addIcon.textContent = '➕';
+  const addText = document.createTextNode(' Добавить');
+  addButton.appendChild(addIcon);
+  addButton.appendChild(addText);
 
   inputGroup.append(taskInput, taskDate, addButton);
   taskForm.appendChild(inputGroup);
@@ -61,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const statusFilter = document.createElement('select');
   statusFilter.className = 'status-filter';
+  
   const filterOptions = [
     { value: 'all', text: '📋 Все задачи' },
     { value: 'incomplete', text: '⏳ Активные' },
@@ -76,11 +82,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const sortButton = document.createElement('button');
   sortButton.className = 'sort-btn';
-  sortButton.innerHTML = '📅 Сортировать по дате';
+  
+  const sortIcon = document.createElement('span');
+  sortIcon.textContent = '📅';
+  const sortText = document.createTextNode(' Сортировать по дате');
+  sortButton.appendChild(sortIcon);
+  sortButton.appendChild(sortText);
 
   const clearCompletedBtn = document.createElement('button');
   clearCompletedBtn.className = 'clear-btn';
-  clearCompletedBtn.innerHTML = '🗑️ Очистить выполненные';
+  
+  const clearIcon = document.createElement('span');
+  clearIcon.textContent = '🗑️';
+  const clearText = document.createTextNode(' Очистить выполненные');
+  clearCompletedBtn.appendChild(clearIcon);
+  clearCompletedBtn.appendChild(clearText);
 
   filtersContainer.append(statusFilter, sortButton, clearCompletedBtn);
   controlsPanel.append(searchContainer, filtersContainer);
@@ -196,7 +212,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     sortAsc = !sortAsc;
-    sortButton.innerHTML = sortAsc ? '📅 Сортировать по дате ↑' : '📅 Сортировать по дате ↓';
+    
+    // Обновляем текст кнопки
+    sortButton.textContent = '';
+    const newSortIcon = document.createElement('span');
+    newSortIcon.textContent = '📅';
+    const newSortText = document.createTextNode(sortAsc ? ' Сортировать по дате ↑' : ' Сортировать по дате ↓');
+    sortButton.appendChild(newSortIcon);
+    sortButton.appendChild(newSortText);
+    
     renderTasks();
     saveTasks();
   }
@@ -222,24 +246,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const completed = tasks.filter(task => task.completed).length;
     const active = total - completed;
 
-    statsPanel.innerHTML = `
-      <div class="stat-item">
-        <span class="stat-label">Всего:</span>
-        <span class="stat-value">${total}</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Активные:</span>
-        <span class="stat-value">${active}</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">Выполненные:</span>
-        <span class="stat-value">${completed}</span>
-      </div>
-    `;
+    // Очищаем статистику
+    while (statsPanel.firstChild) {
+      statsPanel.removeChild(statsPanel.firstChild);
+    }
+
+    // Создаем элементы статистики
+    const stats = [
+      { label: 'Всего:', value: total },
+      { label: 'Активные:', value: active },
+      { label: 'Выполненные:', value: completed }
+    ];
+
+    stats.forEach(stat => {
+      const statItem = document.createElement('div');
+      statItem.className = 'stat-item';
+
+      const statLabel = document.createElement('span');
+      statLabel.className = 'stat-label';
+      statLabel.textContent = stat.label;
+
+      const statValue = document.createElement('span');
+      statValue.className = 'stat-value';
+      statValue.textContent = stat.value;
+
+      statItem.appendChild(statLabel);
+      statItem.appendChild(statValue);
+      statsPanel.appendChild(statItem);
+    });
   }
 
   function showNotification(message, type = 'info') {
-    // Создаем временное уведомление
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
@@ -247,7 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(notification);
     
     setTimeout(() => {
-      notification.remove();
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
     }, 3000);
   }
 
@@ -269,7 +308,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderTasks() {
-    taskList.innerHTML = '';
+    // Очищаем список
+    while (taskList.firstChild) {
+      taskList.removeChild(taskList.firstChild);
+    }
 
     let filteredTasks = tasks.filter(task => {
       if (filterStatus === 'completed' && !task.completed) return false;
@@ -281,11 +323,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filteredTasks.length === 0) {
       const emptyState = document.createElement('li');
       emptyState.className = 'empty-state';
-      emptyState.innerHTML = `
-        <div>📝</div>
-        <p>${searchQuery ? 'Задачи не найдены' : 'Нет задач'}</p>
-        <small>${searchQuery ? 'Попробуйте изменить запрос' : 'Добавьте первую задачу!'}</small>
-      `;
+      
+      const emptyIcon = document.createElement('div');
+      emptyIcon.textContent = '📝';
+      
+      const emptyText = document.createElement('p');
+      emptyText.textContent = searchQuery ? 'Задачи не найдены' : 'Нет задач';
+      
+      const emptySubtext = document.createElement('small');
+      emptySubtext.textContent = searchQuery ? 'Попробуйте изменить запрос' : 'Добавьте первую задачу!';
+      
+      emptyState.appendChild(emptyIcon);
+      emptyState.appendChild(emptyText);
+      emptyState.appendChild(emptySubtext);
       taskList.appendChild(emptyState);
       return;
     }
@@ -296,25 +346,52 @@ document.addEventListener('DOMContentLoaded', () => {
       li.draggable = true;
       li.dataset.id = task.id;
 
-      li.innerHTML = `
-        <div class="task-content">
-          <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''}>
-          <div class="task-info">
-            <span class="task-text">${task.text}</span>
-            <span class="task-date">${formatDate(task.date)}</span>
-          </div>
-        </div>
-        <div class="task-actions">
-          <button class="btn-edit" title="Редактировать">✏️</button>
-          <button class="btn-delete" title="Удалить">🗑️</button>
-        </div>
-      `;
+      // Создаем структуру задачи через DOM методы
+      const taskContent = document.createElement('div');
+      taskContent.className = 'task-content';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'task-checkbox';
+      checkbox.checked = task.completed;
+
+      const taskInfo = document.createElement('div');
+      taskInfo.className = 'task-info';
+
+      const taskText = document.createElement('span');
+      taskText.className = 'task-text';
+      taskText.textContent = task.text;
+
+      const taskDate = document.createElement('span');
+      taskDate.className = 'task-date';
+      taskDate.textContent = formatDate(task.date);
+
+      taskInfo.appendChild(taskText);
+      taskInfo.appendChild(taskDate);
+
+      taskContent.appendChild(checkbox);
+      taskContent.appendChild(taskInfo);
+
+      const taskActions = document.createElement('div');
+      taskActions.className = 'task-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-edit';
+      editBtn.title = 'Редактировать';
+      editBtn.textContent = '✏️';
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn-delete';
+      deleteBtn.title = 'Удалить';
+      deleteBtn.textContent = '🗑️';
+
+      taskActions.appendChild(editBtn);
+      taskActions.appendChild(deleteBtn);
+
+      li.appendChild(taskContent);
+      li.appendChild(taskActions);
 
       // Обработчики событий
-      const checkbox = li.querySelector('.task-checkbox');
-      const editBtn = li.querySelector('.btn-edit');
-      const deleteBtn = li.querySelector('.btn-delete');
-
       checkbox.addEventListener('change', () => toggleTask(task.id));
       editBtn.addEventListener('click', () => editTask(task.id));
       deleteBtn.addEventListener('click', () => deleteTask(task.id));
